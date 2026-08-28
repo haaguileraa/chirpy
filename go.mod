@@ -1,3 +1,3 @@
-module github.com/haaguileraa/httpservers
+module github.com/haaguileraa/chirpy
 
 go 1.26.0
