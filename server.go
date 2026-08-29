@@ -16,7 +16,7 @@ func serve() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", http.StripPrefix(pathPrefix, http.FileServer(http.Dir(filepathRoot))))
-	mux.Handle("/healthz", readinessEndpoint())
+	mux.HandleFunc("/healthz", handleReadiness)
 
 	s := &http.Server {
 		Addr:		port,
@@ -29,11 +29,8 @@ func serve() {
 	log.Fatal(s.ListenAndServe())
 }
 
-func readinessEndpoint() http.Handler {
-	serve := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("content-type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}
-	return http.HandlerFunc(serve)
+func handleReadiness(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
