@@ -12,11 +12,14 @@ const (
 	port = ":8080"
 )
 
-func serve() {
-
+func serve(cfg *apiConfig) {
+	
 	mux := http.NewServeMux()
-	mux.Handle("/app/", http.StripPrefix(pathPrefix, http.FileServer(http.Dir(filepathRoot))))
-	mux.HandleFunc("/healthz", handleReadiness)
+	handlerFileServer := http.StripPrefix(pathPrefix, http.FileServer(http.Dir(filepathRoot)))
+	mux.Handle("/app/", cfg.middlewareMetricsInc(handlerFileServer))
+	mux.HandleFunc("/healthz", handlerReadiness)
+	mux.HandleFunc("/metrics", cfg.handlerNumberRequests)
+	mux.HandleFunc("/reset", cfg.handlerReset)
 
 	s := &http.Server {
 		Addr:		port,
@@ -29,8 +32,8 @@ func serve() {
 	log.Fatal(s.ListenAndServe())
 }
 
-func handleReadiness(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+func handlerReadiness(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("content-type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(http.StatusText(http.StatusOK)))
 }

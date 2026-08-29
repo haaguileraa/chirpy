@@ -1,5 +1,6 @@
 package main
 
 func main() {
-	serve()
+	cfg := newApiConfig()
+	serve(cfg)
 }
