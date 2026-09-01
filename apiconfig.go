@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"sync/atomic"
 )
@@ -22,12 +21,14 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func (cfg *apiConfig) handlerNumberRequests(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("Hits: %d", cfg.fileserverHits.Load())))
+	w.Header().Add("content-type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	metrics := getFormattedMetrics(int(cfg.fileserverHits.Load()))
+	w.Write([]byte(metrics))
 }
 
 func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits.Store(0)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hits reset"))
+	cfg.fileserverHits.Store(0)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hits reset"))
 }
