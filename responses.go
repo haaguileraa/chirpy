@@ -16,8 +16,8 @@ type chirpyError struct {
 	Error 	string `json:"error"`
 }
 
-type chirpyValid struct {
-	Valid	bool `json:"valid"`
+type chirpyCleanedBody struct {
+	CleanedBody	string `json:"cleaned_body"`
 }
 
 func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&body)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode Chirp: %w", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode Chirp: %v", err))
 		return
 	}
 	
@@ -35,9 +35,11 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
 		return
 	}
+
+	badWords := getBadWords()
 	
-	payload := chirpyValid {
-		Valid:	true,
+	payload := chirpyCleanedBody {
+		CleanedBody:	replaceBadWords(body.Body, badWordReplacement, badWords),
 	}
 	respondWithJSON(w, http.StatusOK, payload)
 }
@@ -51,7 +53,7 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 	data, err := json.Marshal(chirpyErr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("could not marshal error data: %w", err)))
+		w.Write([]byte(fmt.Sprintf("could not marshal error data: %v", err)))
 		return
 	}
 	w.WriteHeader(code)
