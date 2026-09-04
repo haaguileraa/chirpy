@@ -8,18 +8,6 @@ import (
 
 const maxBodyLength = 140
 
-type chirpyBody struct {
-	Body 	string `json:"body"`
-}
-
-type chirpyError struct {
-	Error 	string `json:"error"`
-}
-
-type chirpyCleanedBody struct {
-	CleanedBody	string `json:"cleaned_body"`
-}
-
 func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	var body chirpyBody
 	decoder := json.NewDecoder(r.Body)
