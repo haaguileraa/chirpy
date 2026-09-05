@@ -10,7 +10,7 @@ import (
 )
 
 const cleanDatabase = `-- name: CleanDatabase :exec
-TRUNCATE TABLE users
+TRUNCATE TABLE users RESTART IDENTITY CASCADE
 `
 
 func (q *Queries) CleanDatabase(ctx context.Context) error {

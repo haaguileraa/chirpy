@@ -20,6 +20,7 @@ func serve(cfg *apiConfig) {
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
 	mux.HandleFunc("POST /api/users", cfg.handlerUser)
+	mux.HandleFunc("POST /api/chirps", cfg.handlerChirp)
 	mux.HandleFunc("GET /admin/metrics", cfg.handlerNumberRequests)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerReset)
 
