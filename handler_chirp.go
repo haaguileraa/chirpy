@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (cfg *apiConfig) handlerChirp(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
 	
 	type chirpyChirp struct {
 		Body	string    `json:"body"`
