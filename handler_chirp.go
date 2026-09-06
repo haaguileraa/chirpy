@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/haaguileraa/chirpy/internal/database"
 	"net/http"
 )
@@ -38,6 +39,39 @@ func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
 	chirp := chirpDB2JSONChirp(chirpDb)	
 	respondWithJSON(w, http.StatusCreated, chirp)
 }
+
+func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
+	chirpsDb, err := cfg.db.GetAllChirps(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	chirps := make([]Chirp, len(chirpsDb))
+
+	for i, chirpDb := range chirpsDb {
+		chirps[i] = chirpDB2JSONChirp(chirpDb)
+	}
+
+	respondWithJSON(w, http.StatusOK, chirps)
+}
+
+func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request) {
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	chirpDb, err := cfg.db.GetChirpByID(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+	}
+	
+	chirp := chirpDB2JSONChirp(chirpDb)
+	respondWithJSON(w, http.StatusOK, chirp)
+}
+
 
 func validateChirp(chirp chirpyChirp) (chirpyChirp, error) {
 	bodyIsInvalid := len(chirp.Body) > maxBodyLength  

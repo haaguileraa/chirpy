@@ -8,3 +8,11 @@ VALUES (
 	$2
 )
 RETURNING *;
+
+-- name: GetChirpByID :one
+SELECT * FROM chirps
+WHERE chirps.id = $1;
+
+-- name: GetAllChirps :many
+SELECT * FROM chirps
+ORDER BY created_at ASC;
