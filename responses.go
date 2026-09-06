@@ -6,32 +6,6 @@ import (
 	"net/http"
 )
 
-const maxBodyLength = 140
-
-func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
-	var body chirpyBody
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&body)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode Chirp: %v", err))
-		return
-	}
-	
-	bodyIsInvalid := len(body.Body) > maxBodyLength  
-
-	if bodyIsInvalid {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
-		return
-	}
-
-	badWords := getBadWords()
-	
-	payload := chirpyCleanedBody {
-		CleanedBody:	replaceBadWords(body.Body, badWordReplacement, badWords),
-	}
-	respondWithJSON(w, http.StatusOK, payload)
-}
-
 func respondWithError(w http.ResponseWriter, code int, msg string) {
 	w.Header().Add("content-type", "application/json")
 	chirpyErr := chirpyError {
