@@ -33,12 +33,16 @@ func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chirp := Chirp {
+	chirp := chirpDB2JSONChirp(chirpDb)	
+	respondWithJSON(w, http.StatusCreated, chirp)
+}
+
+func chirpDB2JSONChirp(chirpDb database.Chirp) Chirp {
+	return Chirp {
 		ID:		chirpDb.ID,
 		CreatedAt:	chirpDb.CreatedAt,
 		UpdatedAt:	chirpDb.UpdatedAt,
 		Body:		chirpDb.Body,
 		UserID:		chirpDb.UserID,
 	}
-	respondWithJSON(w, http.StatusCreated, chirp)
 }
