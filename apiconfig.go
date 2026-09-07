@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/haaguileraa/chirpy/internal/auth"
 	"github.com/haaguileraa/chirpy/internal/database"
 	"net/http"
 	"sync/atomic"
@@ -44,26 +45,26 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handlerUser(w http.ResponseWriter, r *http.Request) {
-	var email chirpyEmail
+	var userReq chirpyUser
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&email)
+	err := decoder.Decode(&userReq)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode email: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode user: %v", err))
 		return
 	}
 	
-	userDb, err := cfg.db.CreateUser(r.Context(), email.Email)
+	hashedPassword, err := auth.HashPassword(userReq.Password)
+	params := database.CreateUserParams {
+		Email:	userReq.Email,
+		HashedPassword:	hashedPassword,
+	}	
+	userDb, err := cfg.db.CreateUser(r.Context(), params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	
-	user := User {
-		ID: 		userDb.ID,
-		CreatedAt:	userDb.CreatedAt,
-		UpdatedAt:	userDb.UpdatedAt,
-		Email:		userDb.Email,
-	}
+	user := userDB2JSONUser(userDb) 
 	respondWithJSON(w, http.StatusCreated, user)
 }
 

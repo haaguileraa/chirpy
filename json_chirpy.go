@@ -14,8 +14,9 @@ type chirpyError struct {
 	Error 	string `json:"error"`
 }
 
-type chirpyEmail struct {
-	Email	string `json:"email"`
+type chirpyUser struct {
+	Email		string `json:"email"`
+	Password	string `json:"password"`
 }
 
 type User struct {
