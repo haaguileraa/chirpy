@@ -9,19 +9,16 @@ import (
 const malformattedHeader = "Malformatted Authorization header"
 
 func GetBearerToken(headers http.Header) (string, error) {
-	bearer, ok := headers["Authorization"]
-	if !ok {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
 		return "", fmt.Errorf("could not find Authorization header")
 	}
-
-	prefix := "bearer "
-	// bearer is case insensitive -> ToLower
-	token, found := strings.CutPrefix(strings.TrimSpace(strings.ToLower(bearer[0])), prefix)
-	if !found {
-		return "", fmt.Errorf("%s. Expecting 'Bearer <TOKEN>' got '%s'", malformattedHeader, bearer)
+	splitAuth := strings.Split(authHeader, " ")
+	if len(splitAuth) < 2 || splitAuth[0] != "Bearer" {
+		return "", fmt.Errorf("%s. Expecting 'Bearer <TOKEN>' got '%s'", malformattedHeader, authHeader)
 	}
 
-	trimmedToken := strings.TrimSpace(token)
+	trimmedToken := strings.TrimSpace(splitAuth[1])
 	if trimmedToken == "" {
 		return "", fmt.Errorf("%s. No token was found.", malformattedHeader)
 	}

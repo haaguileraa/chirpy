@@ -17,14 +17,14 @@ func TestGetBearerToken(t *testing.T) {
 			header:		http.Header{	
 				"Authorization" : {"Bearer tokenTest"},
 			},
-			tokenToCompare:	"tokentest",
+			tokenToCompare:	"tokenTest",
 			expectingError:	false,
 			match:		true,
 		},{
 			header:		http.Header{	
 				"Authorization" : {"Bearer tokenTestWrong"},
 			},
-			tokenToCompare:	"tokentest",
+			tokenToCompare:	"tokenTest",
 			expectingError:	false,
 			match:		false,
 
@@ -37,16 +37,30 @@ func TestGetBearerToken(t *testing.T) {
 			match:		false,
 		},{
 			header:		http.Header{	
-				"Authorization" : {"     Bearer       tokenTest      "},
+				"Authorization" : {"Bearer"},
 			},
 			tokenToCompare:	"tokentest",
-			expectingError:	false,
-			match:		true,
+			expectingError:	true,
+			match:		false,
 		},{
 			header:		http.Header{	
-				"Authorization" : {"     Bearer       TOKENTEST      "},
+				"Authorization" : {"Bearer   "},
 			},
 			tokenToCompare:	"tokentest",
+			expectingError:	true,
+			match:		false,
+		},{
+			header:		http.Header{	
+				"Authorization" : {"Bearer       tokenTest      "},
+			},
+			tokenToCompare:	"tokentest",
+			expectingError:	true,
+			match:		false,
+		},{
+			header:		http.Header{	
+				"Authorization" : {"Bearer TOKENTEST           "},
+			},
+			tokenToCompare:	"TOKENTEST",
 			expectingError:	false,
 			match:		true,
 		},{
@@ -58,10 +72,10 @@ func TestGetBearerToken(t *testing.T) {
 			match:		false,
 		},{
 			header:		http.Header{	
-				"Authorization" : {"Bearer Tokentest"},
+				"Authorization" : {"BearerTokentest "},
 			},
 			tokenToCompare:	"Tokentest",
-			expectingError:	false,
+			expectingError:	true,
 			match:		false,
 		},
 	}
