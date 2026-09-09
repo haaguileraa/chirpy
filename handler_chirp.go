@@ -5,17 +5,28 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/haaguileraa/chirpy/internal/database"
+	"github.com/haaguileraa/chirpy/internal/auth"
 	"net/http"
 )
 
 const maxBodyLength = 140
 
 func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting token from request"))
+		return
+	}
 	var chirpReq chirpyChirp
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&chirpReq)
+	err = decoder.Decode(&chirpReq)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode chirp with user id: %v", err))
+		return
+	}
+	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Error validating jwt: %s", err.Error()))
 		return
 	}
 
@@ -27,7 +38,7 @@ func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
 
 	params := database.CreateChirpParams {
 		Body:	validatedChirpReq.Body, 
-		UserID:	validatedChirpReq.UserID,
+		UserID:	userID,
 	}
 
 	chirpDb, err := cfg.db.CreateChirp(r.Context(), params)
@@ -35,7 +46,7 @@ func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
+	
 	chirp := chirpDB2JSONChirp(chirpDb)	
 	respondWithJSON(w, http.StatusCreated, chirp)
 }
@@ -84,7 +95,6 @@ func validateChirp(chirp chirpyChirp) (chirpyChirp, error) {
 	cleanedBody := replaceBadWords(chirp.Body, badWordReplacement, badWords)
 	return chirpyChirp {
 		Body:	cleanedBody,
-		UserID:	chirp.UserID,
 	}, nil
 }
 

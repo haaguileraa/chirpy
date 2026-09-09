@@ -20,9 +20,11 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
 	dbQueries := database.New(db)
+	secret := os.Getenv("SECRET")
 	cfg := apiConfig {
 		db: dbQueries,
 		platform: platform,
+		jwtSecret: secret,
 	}
 	serve(&cfg)
 }
