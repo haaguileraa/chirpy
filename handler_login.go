@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-const defaultExpirationTimeSeconds = 3600
+const (
+	defaultExpirationAccessSeconds = 3600
+	defaultExpirationRefreshHours = 60 * 24
+)
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	var userReq chirpyUser
@@ -37,19 +40,30 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	jwtExpiresIn := defaultExpirationTimeSeconds * time.Second  
-	if userReq.ExpiresInSeconds > 0 && userReq.ExpiresInSeconds < defaultExpirationTimeSeconds {
-		jwtExpiresIn = time.Duration(userReq.ExpiresInSeconds) * time.Second
-	}
-	token, err := auth.MakeJWT(userDb.ID, cfg.jwtSecret, jwtExpiresIn)
+	jwtAccessExpiresIn := defaultExpirationAccessSeconds * time.Second
+	token, err := auth.MakeJWT(userDb.ID, cfg.jwtSecret, jwtAccessExpiresIn)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "could not log in")
 		return
 	}
+	
+	paramsRefreshToken := database.CreateRefreshTokenParams {
+		Token: 		auth.MakeRefreshToken(),
+		UserID: 	userDb.ID,
+		ExpiresAt:	time.Now().UTC().Add(defaultExpirationRefreshHours * time.Hour),
+	}
+
+	refreshToken, err := cfg.db.CreateRefreshToken(r.Context(), paramsRefreshToken) 
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not create refresh token")
+		return
+	}
+
 	user := userDB2JSONUser(userDb)
 	userWithToken := UserWithToken {
-		User: user,
-		Token: token,
+		User:		user,
+		Token:		token,
+		RefreshToken:	refreshToken.Token,
 	}
 	respondWithJSON(w, http.StatusOK, userWithToken)
 }

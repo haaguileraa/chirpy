@@ -16,7 +16,6 @@ type chirpyError struct {
 type chirpyUser struct {
 	Email			string 	`json:"email"`
 	Password		string 	`json:"password"`
-	ExpiresInSeconds	int	`json:"expires_in_seconds"`
 }
 
 type User struct {
@@ -28,7 +27,8 @@ type User struct {
 
 type UserWithToken struct {
 	User
-	Token	string `json:"token"`
+	Token		string `json:"token"`
+	RefreshToken	string `json:"refresh_token"`
 }
 
 type Chirp struct {
