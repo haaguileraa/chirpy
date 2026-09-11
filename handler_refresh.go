@@ -32,12 +32,12 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request, ref
 
 func getBearerTokenMiddleware(next func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		refreshToken, err := auth.GetBearerToken(r.Header)
+		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting token from request"))
+			respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error getting token from request"))
 			return
 		}
-		next(w, r, refreshToken)
+		next(w, r, token)
 	}
 }
 
