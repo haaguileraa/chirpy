@@ -55,6 +55,10 @@ func (cfg *apiConfig) handlerUser(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	hashedPassword, err := auth.HashPassword(userReq.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not hash password")
+		return
+	}
 	params := database.CreateUserParams {
 		Email:	userReq.Email,
 		HashedPassword:	hashedPassword,
@@ -67,5 +71,47 @@ func (cfg *apiConfig) handlerUser(w http.ResponseWriter, r *http.Request) {
 	
 	user := userDB2JSONUser(userDb) 
 	respondWithJSON(w, http.StatusCreated, user)
+}
+
+func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("error getting token from request"))
+		return
+	}
+	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("error validating jwt: %v", err))
+		return
+	}
+	var userReq chirpyUser
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&userReq)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("could not decode new user information: %v", err))
+		return
+	}
+	
+	hashedPassword, err := auth.HashPassword(userReq.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not hash password")
+		return
+	}
+	
+	editParams := database.UpdateUserPasswordAndEmailParams {
+		ID:		userID,
+		Email:		userReq.Email,
+		HashedPassword:	hashedPassword,
+	}		
+	
+	editedUser, err := cfg.db.UpdateUserPasswordAndEmail(r.Context(), editParams)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not edit user")
+		return
+	}
+	
+	user := userDB2JSONUser(editedUser) 
+	respondWithJSON(w, http.StatusOK, user)
+
 }
 
