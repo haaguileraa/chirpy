@@ -77,12 +77,47 @@ func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request
 	chirpDb, err := cfg.db.GetChirpByID(r.Context(), chirpID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, err.Error())
+		return
 	}
 	
 	chirp := chirpDB2JSONChirp(chirpDb)
 	respondWithJSON(w, http.StatusOK, chirp)
 }
 
+func (cfg *apiConfig) handlerDeleteChirpByID(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("error getting token from request"))
+		return
+	}
+	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, http.StatusForbidden, fmt.Sprintf("error validating jwt: %v", err))
+		return
+	}
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	chirpDb, err := cfg.db.GetChirpByID(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+	}
+
+	if userID != chirpDb.UserID {
+		respondWithError(w, http.StatusForbidden, fmt.Sprintf("chirp does not belong to the user"))
+		return
+	}
+
+	err = cfg.db.DeleteChirpByID(r.Context(), chirpDb.ID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
 func validateChirp(chirp chirpyChirp) (chirpyChirp, error) {
 	bodyIsInvalid := len(chirp.Body) > maxBodyLength  

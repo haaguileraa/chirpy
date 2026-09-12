@@ -23,6 +23,7 @@ func serve(cfg *apiConfig) {
 	mux.HandleFunc("POST /api/chirps", cfg.handlerPostChirp)
 	mux.HandleFunc("GET /api/chirps", cfg.handlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.handlerGetChirpByID)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.handlerDeleteChirpByID)
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", getBearerTokenMiddleware(cfg.handlerRefresh))
 	mux.HandleFunc("POST /api/revoke", getBearerTokenMiddleware(cfg.handlerRevokeRefreshToken))
